@@ -23,4 +23,8 @@ const auth = getAuth(app);
 const db = getDatabase(app);
 const googleProvider = new GoogleAuthProvider();
 
+if (typeof window !== 'undefined') {
+    console.log("For Firebase auth, add this domain to your authorized domains:", window.location.hostname);
+}
+
 export { app, auth, db, googleProvider };
