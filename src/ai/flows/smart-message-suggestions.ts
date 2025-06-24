@@ -40,18 +40,19 @@ const prompt = ai.definePrompt({
   name: 'suggestMessagesPrompt',
   input: {schema: SuggestMessagesInputSchema},
   output: {schema: SuggestMessagesOutputSchema},
-  prompt: `You are an AI assistant designed to provide smart message suggestions based on chat context.
+  prompt: `أنت مساعد ذكاء اصطناعي مصمم لتقديم اقتراحات رسائل ذكية بناءً على سياق الدردشة باللغة العربية.
 
-  Given the following chat history:
+  بناءً على سجل الدردشة التالي:
   {{chatHistory}}
 
-  And the user's latest input:
+  وآخر مدخلات المستخدم:
   {{userInput}}
 
-  Generate 3 message suggestions that the user can quickly select to respond to the conversation.
+  قم بإنشاء 3 اقتراحات رسائل يمكن للمستخدم تحديدها بسرعة للرد على المحادثة.
 
-  Ensure that the suggestions are relevant to the context and helpful for keeping the conversation flowing.
-  Return the suggestions as an array of strings in the output.`,
+  تأكد من أن الاقتراحات ذات صلة بالسياق ومفيدة للحفاظ على استمرارية المحادثة.
+  يجب أن تكون الردود باللغة العربية.
+  أعد الاقتراحات كمصفوفة من السلاسل النصية في المخرجات.`,
 });
 
 const suggestMessagesFlow = ai.defineFlow(

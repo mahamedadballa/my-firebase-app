@@ -3,6 +3,7 @@
 import type { Message, User } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { ar } from 'date-fns/locale';
 import { Check, CheckCheck } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Image from 'next/image';
@@ -24,7 +25,7 @@ export default function ChatMessage({ message, sender, isCurrentUser, showAvatar
     return (
         <div className={cn(
             "flex items-end gap-2",
-            isCurrentUser ? "justify-end" : "justify-start"
+            isCurrentUser ? "justify-start flex-row-reverse" : "justify-start"
         )}>
             {!isCurrentUser && (
                 <div className="w-8">
@@ -40,28 +41,28 @@ export default function ChatMessage({ message, sender, isCurrentUser, showAvatar
             <div className={cn(
                 "max-w-xs md:max-w-md lg:max-w-lg rounded-xl px-4 py-2",
                 isCurrentUser 
-                    ? "bg-primary text-primary-foreground rounded-br-none"
-                    : "bg-card text-card-foreground rounded-bl-none border"
+                    ? "bg-primary text-primary-foreground rounded-bl-none"
+                    : "bg-card text-card-foreground rounded-br-none border"
             )}>
                 {message.type === 'image' ? (
                     <Image 
                         src={message.text}
-                        alt="Shared image"
+                        alt="صورة مشتركة"
                         width={300}
                         height={200}
                         className="rounded-lg"
                         data-ai-hint="shared image"
                     />
                 ) : (
-                    <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+                    <p className="text-sm whitespace-pre-wrap text-right">{message.text}</p>
                 )}
 
-                 <div className="flex items-center justify-end gap-2 mt-1">
+                 <div className={cn("flex items-center gap-2 mt-1", isCurrentUser ? 'justify-start' : 'justify-end')}>
                     <p className={cn(
                         "text-xs",
                         isCurrentUser ? "text-primary-foreground/70" : "text-muted-foreground"
                     )}>
-                        {format(new Date(message.timestamp), 'p')}
+                        {message.timestamp ? format(new Date(message.timestamp), 'p', { locale: ar }) : ''}
                     </p>
                     {isCurrentUser && <MessageStatus />}
                 </div>

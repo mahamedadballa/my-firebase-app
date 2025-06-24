@@ -50,15 +50,12 @@ export default function ChatInput({ onSendMessage, chatHistory }: ChatInputProps
   const handleSuggestionClick = (suggestion: string) => {
     setMessage(suggestion);
     setSuggestions([]);
-    // Optionally send immediately
-    // onSendMessage(suggestion, 'text');
-    // setMessage('');
   };
 
   return (
     <div>
       {suggestions.length > 0 && (
-        <div className="flex gap-2 mb-2 flex-wrap">
+        <div className="flex gap-2 mb-2 flex-wrap justify-end">
           {suggestions.map((s, i) => (
             <Button key={i} variant="outline" size="sm" onClick={() => handleSuggestionClick(s)} className="rounded-full">
               {s}
@@ -70,8 +67,8 @@ export default function ChatInput({ onSendMessage, chatHistory }: ChatInputProps
         <Textarea
           value={message}
           onChange={e => setMessage(e.target.value)}
-          placeholder="Type a message..."
-          className="pr-24 min-h-[50px] resize-none"
+          placeholder="اكتب رسالة..."
+          className="pl-24 min-h-[50px] resize-none text-right"
           onKeyDown={e => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
@@ -79,7 +76,16 @@ export default function ChatInput({ onSendMessage, chatHistory }: ChatInputProps
             }
           }}
         />
-        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+        <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+           {message.trim() ? (
+            <Button size="icon" onClick={handleSend} className="rounded-full bg-primary hover:bg-primary/90">
+              <SendHorizontal className="h-5 w-5" />
+            </Button>
+          ) : (
+             <Button size="icon" className="rounded-full bg-primary hover:bg-primary/90">
+              <Mic className="h-5 w-5" />
+            </Button>
+          )}
           <Popover>
              <PopoverTrigger asChild>
                 <Button variant="ghost" size="icon" className="text-muted-foreground"><Paperclip className="h-5 w-5" /></Button>
@@ -92,15 +98,6 @@ export default function ChatInput({ onSendMessage, chatHistory }: ChatInputProps
                 </div>
              </PopoverContent>
           </Popover>
-          {message.trim() ? (
-            <Button size="icon" onClick={handleSend} className="rounded-full bg-primary hover:bg-primary/90">
-              <SendHorizontal className="h-5 w-5" />
-            </Button>
-          ) : (
-             <Button size="icon" className="rounded-full bg-primary hover:bg-primary/90">
-              <Mic className="h-5 w-5" />
-            </Button>
-          )}
         </div>
       </div>
     </div>
