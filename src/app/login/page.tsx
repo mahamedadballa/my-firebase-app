@@ -23,7 +23,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'خطأ في تسجيل الدخول',
-        description: `حدث خطأ: ${fbError.message}`,
+        description: 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى أو التأكد من إعدادات Firebase.',
       });
     }
   };
