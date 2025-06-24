@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { signInWithPopup } from 'firebase/auth';
+import { signInWithPopup, type FirebaseError } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,11 +18,12 @@ export default function LoginPage() {
       await signInWithPopup(auth, googleProvider);
       router.push('/');
     } catch (error) {
-      console.error('Error signing in with Google:', error);
+      const fbError = error as FirebaseError;
+      console.error('Error signing in with Google:', fbError);
       toast({
         variant: 'destructive',
         title: 'خطأ في تسجيل الدخول',
-        description: 'حدث خطأ أثناء محاولة تسجيل الدخول باستخدام جوجل. يرجى المحاولة مرة أخرى.',
+        description: `حدث خطأ: ${fbError.message}`,
       });
     }
   };
