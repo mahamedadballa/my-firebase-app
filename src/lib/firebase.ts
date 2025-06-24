@@ -12,8 +12,13 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+// Filter out undefined/empty values to ensure the config is valid.
+const validConfig = Object.fromEntries(
+  Object.entries(firebaseConfig).filter(([, value]) => !!value)
+);
+
 // Initialize Firebase
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const app = !getApps().length ? initializeApp(validConfig) : getApp();
 const auth = getAuth(app);
 const db = getDatabase(app);
 const googleProvider = new GoogleAuthProvider();
