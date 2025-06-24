@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { signInWithPopup, type FirebaseError } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
@@ -8,10 +8,18 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Logo } from '@/components/chat/Logo';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { user, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.push('/');
+    }
+  }, [user, loading, router]);
 
   const handleGoogleSignIn = async () => {
     try {
@@ -28,8 +36,8 @@ export default function LoginPage() {
         description = 'تم إغلاق نافذة تسجيل الدخول. يرجى المحاولة مرة أخرى.';
       } else if (fbError.code === 'auth/unauthorized-domain') {
         description = 'هذا النطاق غير مصرح له. يرجى الاتصال بالدعم.';
-      } else if (fbError.message.includes('INVALID_LOGIN_CREDENTIALS')) {
-        description = 'بيانات الاعتماد المقدمة غير صحيحة.';
+      } else if (fbError.message.includes('INVALID_LOGIN_CREDENTIALS') || fbError.message.includes('The requested action is invalid')) {
+        description = 'بيانات الاعتماد المقدمة غير صحيحة أو أن الإجراء المطلوب غير صالح. تأكد من صحة إعدادات Firebase.';
       }
 
       toast({
@@ -39,6 +47,10 @@ export default function LoginPage() {
       });
     }
   };
+
+  if (loading || user) {
+    return <div className="flex min-h-screen items-center justify-center bg-background p-4">جاري التحميل...</div>;
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">

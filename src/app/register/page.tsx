@@ -23,7 +23,7 @@ const formSchema = z.object({
 
 
 export default function RegisterPage() {
-  const { firebaseUser, loading } = useAuth();
+  const { firebaseUser, user, loading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -37,16 +37,21 @@ export default function RegisterPage() {
   });
 
   useEffect(() => {
-    if (!loading && !firebaseUser) {
-      router.push('/login');
-    }
-    // Pre-fill from Google account if available
-    if (firebaseUser?.displayName) {
+    if (!loading) {
+      if (!firebaseUser) {
+        // Not authenticated, send to login
+        router.push('/login');
+      } else if (user) {
+        // Authenticated and already has a profile, send to main app
+        router.push('/');
+      } else if (firebaseUser?.displayName) {
+        // New user, pre-fill from Google account if available
         const nameParts = firebaseUser.displayName.split(' ');
         form.setValue('firstName', nameParts[0] || '');
         form.setValue('lastName', nameParts.slice(1).join(' ') || '');
+      }
     }
-  }, [firebaseUser, loading, router, form]);
+  }, [firebaseUser, user, loading, router, form]);
   
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!firebaseUser) {
@@ -86,7 +91,7 @@ export default function RegisterPage() {
     }
   };
 
-  if (loading || !firebaseUser) {
+  if (loading || !firebaseUser || user) {
     return <div className="flex h-screen w-full items-center justify-center">جاري التحميل...</div>;
   }
 
