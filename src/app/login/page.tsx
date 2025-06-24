@@ -28,7 +28,7 @@ export default function LoginPage() {
     } catch (error) {
       const fbError = error as FirebaseError;
 
-      if (fbError.code === 'auth/popup-closed-by-user') {
+      if (fbError.code === 'auth/popup-closed-by-user' || fbError.code === 'auth/cancelled-popup-request') {
         // This is a user action, not a system error.
         // We can show a gentle notification, but no need to log it as an error.
         toast({
