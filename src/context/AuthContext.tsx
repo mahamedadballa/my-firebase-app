@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
-import { ref, onValue, off } from 'firebase/database';
+import { ref, onValue, get, update } from 'firebase/database';
 import type { User } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -30,14 +30,42 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
       setFirebaseUser(fbUser);
       if (fbUser) {
-        // User is signed in, see if they exist in the database
         const userRef = ref(db, `users/${fbUser.uid}`);
-        onValue(userRef, (snapshot) => {
+        onValue(userRef, async (snapshot) => {
           if (snapshot.exists()) {
-            setUser({ ...snapshot.val(), uid: fbUser.uid, id: fbUser.uid });
+            const userData = snapshot.val();
+            
+            // Backfill pistyId for existing users if it doesn't exist
+            if (!userData.pistyId) {
+              const generateUniquePistyId = async (): Promise<string> => {
+                  const allUsersRef = ref(db, 'users');
+                  const allUsersSnap = await get(allUsersRef);
+                  const allUsersData = allUsersSnap.val() || {};
+                  const existingIds = new Set(Object.values(allUsersData).map((u: any) => u.pistyId).filter(Boolean));
+                  
+                  let newId = '';
+                  let isUnique = false;
+                  while (!isUnique) {
+                      newId = Math.floor(100000000 + Math.random() * 900000000).toString();
+                      if (!existingIds.has(newId)) {
+                          isUnique = true;
+                      }
+                  }
+                  return newId;
+              };
+              
+              try {
+                const newPistyId = await generateUniquePistyId();
+                await update(userRef, { pistyId: newPistyId });
+                userData.pistyId = newPistyId;
+              } catch (error) {
+                console.error("Failed to backfill pistyId", error)
+              }
+            }
+
+            setUser({ ...userData, uid: fbUser.uid, id: fbUser.uid });
             setLoading(false);
           } else {
-            // User is new, redirect to registration
             router.push('/register');
             setLoading(false);
           }

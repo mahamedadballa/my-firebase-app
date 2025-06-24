@@ -1,6 +1,7 @@
 export type User = {
   id: string; // This will be the uid
   uid: string;
+  pistyId: string; // Unique, numbers-only ID for sharing
   firstName: string;
   lastName: string;
   name: string; // Combination of first and last

@@ -5,13 +5,22 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Camera } from 'lucide-react';
+import { Camera, Copy, Share2 } from 'lucide-react';
 import { auth, db } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { ref, update } from 'firebase/database';
 import { useState } from 'react';
+import QRCode from 'qrcode.react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface ProfileProps {
   user: User;
@@ -58,13 +67,22 @@ export default function Profile({ user }: ProfileProps) {
     }
   }
 
+  const handleCopyId = () => {
+    if (!user.pistyId) return;
+    navigator.clipboard.writeText(user.pistyId);
+    toast({
+        title: "تم النسخ",
+        description: "تم نسخ الـ ID الخاص بك.",
+    });
+  }
+
   return (
     <div className="flex flex-col h-full text-right">
         <div className="p-4 border-b">
             <h2 className="text-2xl font-bold">الملف الشخصي</h2>
             <p className="text-sm text-muted-foreground">قم بإدارة معلوماتك الشخصية.</p>
         </div>
-        <div className="flex-1 p-6 space-y-8">
+        <div className="flex-1 p-6 space-y-6">
             <div className="flex flex-col items-center space-y-4">
                 <div className="relative">
                     <Avatar className="h-32 w-32">
@@ -79,6 +97,18 @@ export default function Profile({ user }: ProfileProps) {
                 <div className="text-center">
                     <h3 className="text-2xl font-bold">{user.name}</h3>
                     <p className="text-muted-foreground">{user.status === 'online' ? 'متصل' : 'غير متصل'}</p>
+                     <div className="flex items-center justify-center gap-2 mt-2 text-sm text-muted-foreground">
+                        {user.pistyId ? (
+                            <>
+                                <span>ID: {user.pistyId}</span>
+                                <button onClick={handleCopyId} className="p-1 hover:bg-muted rounded-md" aria-label="Copy ID">
+                                    <Copy className="h-4 w-4" />
+                                </button>
+                            </>
+                        ) : (
+                            <span>جاري إنشاء الـ ID...</span>
+                        )}
+                    </div>
                 </div>
             </div>
         
@@ -93,8 +123,36 @@ export default function Profile({ user }: ProfileProps) {
                 </div>
             </div>
 
-            <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleSaveChanges}>حفظ التغييرات</Button>
-            <Button variant="outline" className="w-full" onClick={handleSignOut}>تسجيل الخروج</Button>
+            <div className="space-y-2">
+                <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleSaveChanges}>حفظ التغييرات</Button>
+                
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <Button variant="outline" className="w-full" disabled={!user.pistyId}>
+                           <Share2 className="ml-2 h-4 w-4"/> مشاركة الملف الشخصي
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md text-right">
+                        <DialogHeader>
+                            <DialogTitle>مشاركة ملفك الشخصي</DialogTitle>
+                            <DialogDescription>
+                                يمكن للآخرين إضافتك باستخدام الـ ID أو عن طريق مسح هذا الرمز.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="flex flex-col items-center justify-center p-4 space-y-4">
+                            <div className="p-4 bg-white rounded-lg">
+                                <QRCode value={user.pistyId || ''} size={160} />
+                            </div>
+                            <div className="text-center">
+                                <p className="font-bold text-lg">{user.name}</p>
+                                <p className="text-muted-foreground">ID: {user.pistyId}</p>
+                            </div>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+
+                <Button variant="outline" className="w-full" onClick={handleSignOut}>تسجيل الخروج</Button>
+            </div>
         </div>
     </div>
   );

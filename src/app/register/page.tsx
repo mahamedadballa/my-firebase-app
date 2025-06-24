@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ref, set } from 'firebase/database';
+import { ref, set, get } from 'firebase/database';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -63,8 +63,28 @@ export default function RegisterPage() {
       return;
     }
 
+    const generateUniquePistyId = async (): Promise<string> => {
+        const usersRef = ref(db, 'users');
+        const allUsersSnap = await get(usersRef);
+        const allUsersData = allUsersSnap.val() || {};
+        const existingIds = new Set(Object.values(allUsersData).map((u: any) => u.pistyId));
+
+        let newId = '';
+        let isUnique = false;
+        while (!isUnique) {
+            newId = Math.floor(100000000 + Math.random() * 900000000).toString();
+            if (!existingIds.has(newId)) {
+                isUnique = true;
+            }
+        }
+        return newId;
+    };
+
+    const pistyId = await generateUniquePistyId();
+
     const newUser = {
         uid: firebaseUser.uid,
+        pistyId,
         email: firebaseUser.email,
         avatar: firebaseUser.photoURL || `https://placehold.co/100x100.png`,
         firstName: values.firstName,

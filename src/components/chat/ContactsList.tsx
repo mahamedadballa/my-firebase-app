@@ -4,10 +4,13 @@ import type { User } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { MessageSquarePlus } from 'lucide-react';
+import { MessageSquarePlus, Plus } from 'lucide-react';
 import { ref, set, get, child, push } from 'firebase/database';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
+import { Input } from '@/components/ui/input';
+
 
 interface ContactsListProps {
   users: User[];
@@ -19,6 +22,7 @@ interface ContactsListProps {
 export default function ContactsList({ users, currentUser, onSelectChat, setView }: ContactsListProps) {
   const otherUsers = users.filter(u => u.id !== currentUser.id);
   const { toast } = useToast();
+  const [addId, setAddId] = useState('');
     
   const handleStartChat = async (user: User) => {
     if (!currentUser) return;
@@ -54,11 +58,39 @@ export default function ContactsList({ users, currentUser, onSelectChat, setView
     setView('chats');
   }
 
+  const handleAddContactById = () => {
+    if (!addId.trim()) return;
+    const userToAdd = users.find(u => u.pistyId === addId.trim() && u.id !== currentUser.id);
+
+    if (userToAdd) {
+        handleStartChat(userToAdd);
+        setAddId('');
+    } else {
+        toast({
+            variant: 'destructive',
+            title: "لم يتم العثور على المستخدم",
+            description: "تأكد من إدخال الـ ID الصحيح.",
+        });
+    }
+  }
+
   return (
     <div className="flex flex-col h-full text-right">
          <div className="p-4 border-b">
             <h2 className="text-2xl font-bold">جهات الاتصال</h2>
             <p className="text-sm text-muted-foreground">تواصل مع الآخرين في دائرتك.</p>
+             <div className="flex gap-2 mt-4">
+                <Input 
+                    placeholder="أدخل ID المستخدم..."
+                    value={addId}
+                    onChange={e => setAddId(e.target.value)}
+                    className="text-right flex-1"
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleAddContactById() }}
+                />
+                <Button size="icon" onClick={handleAddContactById}>
+                    <Plus className="h-5 w-5" />
+                </Button>
+            </div>
         </div>
         <ScrollArea className="flex-1">
             <div className="flex flex-col">
