@@ -46,6 +46,9 @@ export default function LoginPage() {
             </Button>
             {/* Phone auth can be added here */}
           </div>
+           <p className="mt-4 text-xs text-muted-foreground text-center">
+            إذا واجهت مشكلة، تأكد من تفعيل "Google" كطريقة تسجيل دخول في إعدادات المصادقة بمشروع Firebase.
+          </p>
         </CardContent>
       </Card>
     </div>
