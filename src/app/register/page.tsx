@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ref, set } from 'firebase/database';
 import { db } from '@/lib/firebase';
@@ -8,32 +8,47 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Logo } from '@/components/chat/Logo';
 import { useToast } from '@/hooks/use-toast';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+const formSchema = z.object({
+    firstName: z.string().min(2, { message: "الاسم الأول يجب أن يكون حرفين على الأقل." }),
+    lastName: z.string().min(2, { message: "اسم العائلة يجب أن يكون حرفين على الأقل." }),
+    phone: z.string().optional(),
+});
+
 
 export default function RegisterPage() {
   const { firebaseUser, loading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    phone: '',
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      phone: "",
+    },
   });
 
   useEffect(() => {
     if (!loading && !firebaseUser) {
       router.push('/login');
     }
-  }, [firebaseUser, loading, router]);
+    // Pre-fill from Google account if available
+    if (firebaseUser?.displayName) {
+        const nameParts = firebaseUser.displayName.split(' ');
+        form.setValue('firstName', nameParts[0] || '');
+        form.setValue('lastName', nameParts.slice(1).join(' ') || '');
+    }
+  }, [firebaseUser, loading, router, form]);
   
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.id]: e.target.value });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!firebaseUser) {
         toast({
             variant: 'destructive',
@@ -42,23 +57,15 @@ export default function RegisterPage() {
           });
       return;
     }
-    if (!formData.firstName || !formData.lastName) {
-        toast({
-            variant: 'destructive',
-            title: 'حقول مطلوبة',
-            description: 'الاسم الأول واسم العائلة حقول إلزامية.',
-          });
-        return;
-    }
 
     const newUser = {
         uid: firebaseUser.uid,
         email: firebaseUser.email,
         avatar: firebaseUser.photoURL || `https://placehold.co/100x100.png`,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        name: `${formData.firstName} ${formData.lastName}`,
-        phone: formData.phone,
+        firstName: values.firstName,
+        lastName: values.lastName,
+        name: `${values.firstName} ${values.lastName}`,
+        phone: values.phone,
         status: 'online',
     };
 
@@ -94,23 +101,52 @@ export default function RegisterPage() {
           <CardDescription>نحتاج بعض المعلومات الإضافية للبدء.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="firstName">الاسم الأول</Label>
-              <Input id="firstName" value={formData.firstName} onChange={handleChange} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="lastName">اسم العائلة</Label>
-              <Input id="lastName" value={formData.lastName} onChange={handleChange} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">رقم الهاتف (اختياري)</Label>
-              <Input id="phone" type="tel" value={formData.phone} onChange={handleChange} />
-            </div>
-            <Button type="submit" className="w-full">
-              حفظ ومتابعة
-            </Button>
-          </form>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 text-right">
+               <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>الاسم الأول</FormLabel>
+                    <FormControl>
+                      <Input placeholder="الاسم الأول" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>اسم العائلة</FormLabel>
+                    <FormControl>
+                      <Input placeholder="اسم العائلة" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>رقم الهاتف (اختياري)</FormLabel>
+                    <FormControl>
+                      <Input type="tel" placeholder="رقم الهاتف" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? "جاري الحفظ..." : "حفظ ومتابعة"}
+              </Button>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>

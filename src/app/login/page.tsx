@@ -16,14 +16,26 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
-      router.push('/');
+      // The AuthContext will handle redirection automatically.
     } catch (error) {
       const fbError = error as FirebaseError;
-      console.error('Error signing in with Google:', fbError);
+      console.error('Error signing in with Google:', fbError.code, fbError.message);
+      
+      let description = 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.';
+      if (fbError.code === 'auth/invalid-credential' || fbError.code === 'auth/user-disabled' ) {
+        description = 'بيانات الاعتماد غير صالحة أو تم تعطيل المستخدم.';
+      } else if (fbError.code === 'auth/popup-closed-by-user') {
+        description = 'تم إغلاق نافذة تسجيل الدخول. يرجى المحاولة مرة أخرى.';
+      } else if (fbError.code === 'auth/unauthorized-domain') {
+        description = 'هذا النطاق غير مصرح له. يرجى الاتصال بالدعم.';
+      } else if (fbError.message.includes('INVALID_LOGIN_CREDENTIALS')) {
+        description = 'بيانات الاعتماد المقدمة غير صحيحة.';
+      }
+
       toast({
         variant: 'destructive',
         title: 'خطأ في تسجيل الدخول',
-        description: 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى أو التأكد من إعدادات Firebase.',
+        description: description,
       });
     }
   };
