@@ -27,13 +27,22 @@ export default function LoginPage() {
       // The AuthContext will handle redirection automatically.
     } catch (error) {
       const fbError = error as FirebaseError;
+
+      if (fbError.code === 'auth/popup-closed-by-user') {
+        // This is a user action, not a system error.
+        // We can show a gentle notification, but no need to log it as an error.
+        toast({
+          title: 'تم إلغاء تسجيل الدخول',
+          description: 'لقد أغلقت نافذة تسجيل الدخول. يمكنك المحاولة مرة أخرى.',
+        });
+        return;
+      }
+      
       console.error('Error signing in with Google:', fbError.code, fbError.message);
       
       let description = 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.';
       if (fbError.code === 'auth/invalid-credential' || fbError.code === 'auth/user-disabled' ) {
         description = 'بيانات الاعتماد غير صالحة أو تم تعطيل المستخدم.';
-      } else if (fbError.code === 'auth/popup-closed-by-user') {
-        description = 'تم إغلاق نافذة تسجيل الدخول. يرجى المحاولة مرة أخرى.';
       } else if (fbError.code === 'auth/unauthorized-domain') {
         description = 'هذا النطاق غير مصرح له. يرجى الاتصال بالدعم.';
       } else if (fbError.message.includes('INVALID_LOGIN_CREDENTIALS') || fbError.message.includes('The requested action is invalid')) {
